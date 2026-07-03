@@ -1,0 +1,9 @@
+pyqt5
+colorlog
+selenium
+schedule
+pywin32
+pycaw
+json5
+
+pyinstaller

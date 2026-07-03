@@ -1,0 +1,36 @@
+{
+    /* 默认配置 */
+    "default": {
+        "play_time": "18:48:00", // 播放时间
+        "play_duration": 15, // 播放时长 (分钟)
+        "video_source": "[auto_switch]", // 视频源 ("[auto_switch]"表示自动切换)
+        "volume": 0.8, // 音量 (0-1)
+        "no_weekend_play": true, // 周末不播
+        "hide_progress_bar": false, // 是否隐藏进度条
+        "show_notice_win": true, // 显示右下角提示窗
+        "color_theme": "dark", // 颜色主题
+        "additional_script": "", // 附加脚本 (新闻播放完成后运行)
+        /* 广告检测设置 */
+        "ad_settings": {
+            "max_ad_check": 5, // 最大检测次数
+            "ad_check_wait": 1.5 // 检测延迟
+        },
+        /* 以下是程序内部配置 */
+        "total_duration": 30, // 视频总时长
+        "fail_auto_switch_source": true, // 今日说法播放失败后自动切新闻30分
+        "xw30f_url": "https://tv.cctv.com/lm/xw30f/", // 新闻30分链接
+        "jrsf_url": "https://tv.cctv.com/lm/jrsf/index.shtml", // 今日说法链接
+        "progress_bar_css": ".vjs-progress-control", // 进度条css
+        "fs_btn_css": "button.vjs-fullscreen-control", // 全屏按钮css
+        "big_play_btn_css": "button.vjs-big-play-button", // 大播放按钮css
+        "xw30f_beforehand_close_sec": 10, // 新闻30分提前关闭秒数
+        "jrsf_beforehand_close_sec": 20, // 今日说法提前关闭秒数
+        "browser_title": "Google Chrome for Testing", // 浏览器标题
+        "last_source": "XW30F" // 记录上次播源
+    },
+    /* 自动化测试相关配置 */
+    "auto_test": {
+        "test_times": 1, // 测试次数
+        "play_duration": 15 // 测试时长 (分钟)
+    }
+}
