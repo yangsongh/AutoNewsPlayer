@@ -10,7 +10,7 @@ import subprocess
 from ctypes import windll
 from win32api import MessageBox
 
-from utils.UtilsLibs import LoggerManager, ConfigManager, Utils
+from utils.utils_lib import LoggerManager, ConfigManager, Utils
 from modules.AutomaticBrowser import startChrome, clickElement
 
 from pathlib import Path

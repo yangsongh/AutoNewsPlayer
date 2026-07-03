@@ -2,7 +2,7 @@ import sys
 
 from PyQt5.QtWidgets import QApplication
 from modules.AutoNewsPlayer import AutoNewsPlayer
-from utils.UtilsLibs import Utils, LoggerManager, ConfigManager
+from utils.utils_lib import Utils, LoggerManager, ConfigManager
 
 from windows.Notification import Notification
 from windows.Main import MainWindow

@@ -2,7 +2,7 @@ import os
 import time
 
 from typing import Callable, Optional
-from utils.UtilsLibs import LoggerManager, Utils
+from utils.utils_lib import LoggerManager, Utils
 
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service

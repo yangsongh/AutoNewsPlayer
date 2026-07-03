@@ -1,7 +1,7 @@
 import os
 
 from windows.ui.Ui_Notification import Ui_notification
-from utils.UtilsLibs import Utils, LoggerManager
+from utils.utils_lib import Utils, LoggerManager
 
 from PyQt5.QtGui import QIcon
 from PyQt5.QtCore import Qt, QPoint, pyqtSignal

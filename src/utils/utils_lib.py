@@ -1,44 +1,68 @@
 # -*- coding: utf-8 -*-
 # @Author : yangsongh
-# @File : UtilsLib.py
-# @Version : 1.1.0
+# @File : utils_lib.py
+# @Version : 1.0.7
 
 import os
+import re
 import sys
-import time
 import json
-import json5
+import time
 import logging
 import traceback
 import threading
 
-from types import TracebackType
-from typing import Type, Union
 from datetime import datetime
-from logging import DEBUG, INFO, WARNING, ERROR
+from types import TracebackType
+from colorlog import ColoredFormatter
+from typing import Callable, Optional, Type, Union
+from logging import DEBUG, INFO, WARNING, ERROR, Handler, LogRecord
+
+
+class CustomHandler(Handler):
+    """自定义日志处理器"""
+
+    def __init__(self, callback: Callable[[str], None]):
+        super().__init__()
+        self.callback = callback
+
+    def emit(self, record: LogRecord):
+        """发送日志"""
+        try:
+            if self.callback:
+                # 使用格式化器格式化消息（保留颜色代码）
+                msg = self.format(record)
+                self.callback(msg)
+        except Exception:
+            self.handleError(record)
 
 
 class LoggerManager:
-    logger_lock = threading.Lock()
+    _logger_lock = threading.Lock()
+    _web_console_callback: Optional[Callable[[str], None]] = None
 
-    def __init__(self, logger_name: Union[str, None] = 'default', file_name: Union[str, None] = None):
+    def __init__(self, logger_name: Union[str, None] = 'default', file_name: Union[str, None] = None,
+                 file_format_str: str = '%(asctime)s %(levelname)1.1s %(filename)s:%(lineno)d %(message)s',
+                 console_format_str: str = '%(asctime)s %(filename)s:%(lineno)d-%(funcName)s %(log_color)s%(message)s',
+                 console_handler_level=DEBUG, file_handler_level=INFO, no_file_handler=False,
+                 custom_callback: Optional[Callable[[str], None]] = None, propagate: bool = False):
         self.logger = logging.getLogger(logger_name)
+        self.logger.propagate = propagate  # 是否允许传播到 root
         self.logger.setLevel(DEBUG)  # 控制日志最低输出等级
         self.logger.handlers.clear()  # 防止重复输出
 
-        fileFormatStr = '%(asctime)s %(levelname)s %(filename)s:%(lineno)d %(message)s'
-        consoleFormatStr = '%(asctime)s %(filename)s:%(lineno)d-%(funcName)s %(log_color)s%(message)s'
+        # 文件处理器
+        if not no_file_handler:
+            file_formatter = logging.Formatter(file_format_str)
+            file_handler = logging.FileHandler(self.get_log_file_path(
+                file_name), mode='a', encoding='utf-8')
+            file_handler.setFormatter(file_formatter)
+            file_handler.setLevel(file_handler_level)  # 文件日志输出等级
+            self.logger.addHandler(file_handler)
 
-        fileFormatter = logging.Formatter(fileFormatStr)
-        fileHandler = logging.FileHandler(self.get_log_file_path(
-            file_name), mode='a', encoding='utf-8')
-        fileHandler.setFormatter(fileFormatter)
-        fileHandler.setLevel(INFO)  # 文件日志输出等级
-        self.logger.addHandler(fileHandler)
-
-        from colorlog import ColoredFormatter  # type: ignore
-        consoleFormatter = ColoredFormatter(
-            consoleFormatStr,
+        # 控制台处理器（带颜色）
+        console_formatter = ColoredFormatter(
+            console_format_str,
             log_colors={
                 'DEBUG': 'blue',
                 'INFO': 'green',
@@ -46,10 +70,34 @@ class LoggerManager:
                 'ERROR': 'red'
             }
         )
-        consoleHandler = logging.StreamHandler(sys.stdout)
-        consoleHandler.setFormatter(consoleFormatter)
-        consoleHandler.setLevel(DEBUG)  # 控制台日志输出等级
-        self.logger.addHandler(consoleHandler)
+        console_handler = logging.StreamHandler(sys.stdout)
+        console_handler.setFormatter(console_formatter)
+        console_handler.setLevel(console_handler_level)  # 控制台日志输出等级
+        self.logger.addHandler(console_handler)
+
+        # 自定义处理器
+        if custom_callback:
+            self.add_custom_callback(custom_callback)
+
+    def add_custom_callback(self, callback: Callable[[str], None]):
+        """动态添加自定义回调"""
+        # 检查是否已存在 CustomHandler
+        for handler in self.logger.handlers:
+            if isinstance(handler, CustomHandler):
+                # 已存在，更新回调
+                handler.callback = callback
+                return
+
+        # 添加新的处理器
+        custom_handler = CustomHandler(callback)
+        # 使用现有的控制台格式化器
+        for handler in self.logger.handlers:
+            if not isinstance(handler, logging.FileHandler) and not isinstance(handler, CustomHandler):
+                custom_handler.setFormatter(handler.formatter)
+                custom_handler.setLevel(handler.level)
+                break
+
+        self.logger.addHandler(custom_handler)
 
     @staticmethod
     def get_log_file_path(file_name: Union[str, None] = None) -> str:
@@ -66,19 +114,19 @@ class LoggerManager:
         return log_file_path
 
     def info(self, message: object) -> None:
-        with self.logger_lock:  # 确保线程安全
+        with self._logger_lock:
             self.logger.info(message, stacklevel=2)
 
     def warning(self, message: object) -> None:
-        with self.logger_lock:
+        with self._logger_lock:
             self.logger.warning(message, stacklevel=2)
 
     def error(self, message: object, exc_info=None) -> None:
-        with self.logger_lock:
+        with self._logger_lock:
             self.logger.error(message, exc_info=exc_info, stacklevel=2)
 
     def debug(self, message: object) -> None:
-        with self.logger_lock:
+        with self._logger_lock:
             self.logger.debug(message, stacklevel=2)
 
 
@@ -99,9 +147,13 @@ class ConfigManager:
                     self.logger.warning(f'{self.cfg_file} 不存在或为空，恢复默认配置')
                     return self.restore_default_config()
 
-                # 读取配置文件
+                # 读取并清理配置文件
                 with open(self.cfg_file, 'r', encoding='utf-8') as f:
-                    self.cfgs = json5.load(f)
+                    content = re.sub(r'//.*?$|/\*.*?\*/', '',
+                                     f.read(), flags=re.MULTILINE | re.DOTALL)
+
+                # 解析JSON
+                self.cfgs = json.loads(content)
 
                 # 如果解析结果为空，恢复默认配置
                 if not self.cfgs:
@@ -110,9 +162,11 @@ class ConfigManager:
 
                 return True
 
-            except Exception as e:
-                self.logger.error(f'加载配置文件失败: {repr(e)}，恢复默认配置')
-                return self.restore_default_config()
+            except (json.JSONDecodeError, Exception) as e:
+                # self.logger.error(f'加载配置文件失败: {repr(e)}，恢复默认配置')
+                # return self.restore_default_config()
+                self.logger.warning(f'配置文件 {self.cfg_file} 解析失败, 请检查文件: {repr(e)}')
+                return False
 
     def save_config(self) -> bool:
         """保存配置文件"""
@@ -172,8 +226,9 @@ class Utils:
             """处理未捕获的异常"""
             stack_summary = []
             for frame in traceback.extract_tb(exc_traceback):
+                colno = getattr(frame, "colno", None)
                 stack_summary.append(
-                    f'文件 {frame.filename}, 行号 {frame.lineno}, 列号 {frame.colno}, 帧名 {frame.name}\n'
+                    f'文件 {frame.filename}, 行号 {frame.lineno}, 列号 {colno}, 帧名 {frame.name}\n'
                 )
                 if frame.line:
                     stack_summary.append(f'  {frame.line}')
@@ -193,12 +248,17 @@ class Utils:
 
             logger.error(err_msg, exc_info=(
                 exc_type, exc_value, exc_traceback))
+
         sys.excepthook = handle_exception
 
     @staticmethod
     def debug_memory_usage(logger: LoggerManager) -> None:
         """日志记录内存占用"""
-        import psutil  # type: ignore
+        try:
+            import psutil  # type: ignore
+        except ImportError:
+            logger.error('未安装psutil库, 无法记录内存占用')
+            return
         mem = psutil.virtual_memory()
         process = psutil.Process()
         logger.debug(
@@ -245,7 +305,7 @@ class Utils:
     def qt_setup_high_dpi(logger: LoggerManager) -> bool:
         """Qt适配高DPI (必须在QApplication注册前执行)"""
         try:
-            from PyQt5.QtWidgets import QApplication  # type: ignore
+            from PyQt5.QtWidgets import QApplication # type: ignore
             from PyQt5.QtCore import Qt, QCoreApplication  # type: ignore
 
             os.putenv('QT_ENABLE_HIGHDPI_SCALING', '1')
@@ -256,6 +316,10 @@ class Utils:
             QCoreApplication.setAttribute(
                 Qt.ApplicationAttribute.AA_UseHighDpiPixmaps)
             logger.debug('已启用自动DPI模式')
+            
+        except ImportError:
+            logger.error(f'未安装PyQt5')
+            return False
         except Exception as e:
             logger.error(f'启动自动DPI失败: {repr(e)}')
             return False

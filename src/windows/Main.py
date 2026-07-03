@@ -10,7 +10,7 @@ from modules.AutoNewsPlayer import AutoNewsPlayer
 
 from windows.ui.Ui_Main import Ui_Main
 from windows.Notification import Notification
-from utils.UtilsLibs import LoggerManager, ConfigManager, Utils
+from utils.utils_lib import LoggerManager, ConfigManager, Utils
 
 
 from PyQt5.QtGui import QIcon
