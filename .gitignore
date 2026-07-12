@@ -3,3 +3,4 @@ desktop.ini
 __pycache__
 .VSCodeCounter
 .venv
+build/AutoNewsPlayer
