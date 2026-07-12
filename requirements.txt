@@ -4,6 +4,6 @@ selenium
 schedule
 pywin32
 pycaw
-json5
+# json5
 
 pyinstaller
