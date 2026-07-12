@@ -4,11 +4,10 @@ import time
 from typing import Callable, Optional
 from utils.utils_lib import LoggerManager, Utils
 
-from selenium import webdriver
+from selenium.webdriver.chrome import webdriver
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.remote.webelement import WebElement
-
 
 def getChromeDir():
     """查找 chrome 目录，按层级顺序尝试可能的路径"""
@@ -74,7 +73,7 @@ def startChrome(logger: LoggerManager):
             'excludeSwitches', ['enable-automation'])
         options.add_argument('--start-maximized')
         service = Service(chromedriver_path)
-        driver = webdriver.Chrome(
+        driver = webdriver.WebDriver(
             service=service, options=options)  # type: ignore
         logger.debug('浏览器已启动')
         return driver
