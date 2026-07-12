@@ -4,12 +4,11 @@ import os
 import threading
 import winreg as reg
 
-from pathlib import Path
 from win32api import MessageBox
-from modules.AutoNewsPlayer import AutoNewsPlayer
+from modules.auto_news_player import AutoNewsPlayer
 
 from windows.ui.Ui_Main import Ui_Main
-from windows.Notification import Notification
+from windows.notification import Notification
 from utils.utils_lib import LoggerManager, ConfigManager, Utils
 
 

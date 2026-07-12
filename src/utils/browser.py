@@ -9,7 +9,8 @@ from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.remote.webelement import WebElement
 
-def getChromeDir():
+
+def get_chrome_dir():
     """查找 chrome 目录，按层级顺序尝试可能的路径"""
     base_dir = Utils.get_bundle_dir()
     rel_paths = [
@@ -27,17 +28,17 @@ def getChromeDir():
     return os.path.join(base_dir, rel_paths[(-1)])
 
 
-def getChromedriverPath():
-    chromedriver_path = os.path.join(getChromeDir(), 'chromedriver.exe')
+def get_chrome_driver_path():
+    chromedriver_path = os.path.join(get_chrome_dir(), 'chromedriver.exe')
     return chromedriver_path
 
 
-def getChromeBinaryPath():
-    chrome_path = os.path.join(getChromeDir(), 'chrome.exe')
+def get_chrome_binary_path():
+    chrome_path = os.path.join(get_chrome_dir(), 'chrome.exe')
     return chrome_path
 
 
-def clickElement(logger, element: WebElement, max_retries=20, wait_time=0.0, fail_callback: Optional[Callable] = None):
+def click_element(logger, element: WebElement, max_retries=20, wait_time=0.0, fail_callback: Optional[Callable] = None):
     retries = 0
     while retries < max_retries:
         try:
@@ -58,10 +59,10 @@ def clickElement(logger, element: WebElement, max_retries=20, wait_time=0.0, fai
     return False
 
 
-def startChrome(logger: LoggerManager):
+def launch_chrome(logger: LoggerManager):
     """启动 Chrome 浏览器"""
-    chromedriver_path = getChromedriverPath()
-    chrome_binary_path = getChromeBinaryPath()
+    chromedriver_path = get_chrome_driver_path()
+    chrome_binary_path = get_chrome_binary_path()
     logger.info(f'使用的 ChromeDriver 路径: {chromedriver_path}')
     logger.info(f'使用的 Chrome 二进制路径: {chrome_binary_path}')
     try:

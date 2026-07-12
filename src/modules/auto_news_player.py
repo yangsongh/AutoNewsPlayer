@@ -10,12 +10,12 @@ import subprocess
 from ctypes import windll
 from win32api import MessageBox
 
+from utils.browser import launch_chrome, click_element
 from utils.utils_lib import LoggerManager, ConfigManager, Utils
-from modules.AutomaticBrowser import startChrome, clickElement
 
 from pathlib import Path
 from PyQt5.QtCore import QTimer
-from windows.Notification import Notification
+from windows.notification import Notification
 
 from pythoncom import CoInitialize, CoUninitialize
 from pycaw.pycaw import AudioUtilities
@@ -139,7 +139,7 @@ class AutoNewsPlayer:
         try:
             url = self.xw30f_url if self.video_source == 'XW30F' else self.jrsf_url
             self.logger.info(f'打开浏览器并访问新闻页面：{url}')
-            self.driver = startChrome(self.logger)
+            self.driver = launch_chrome(self.logger)
             if not self.driver:
                 raise Exception('无法启动Chrome浏览器')
             else:
@@ -194,7 +194,7 @@ class AutoNewsPlayer:
                         xpath = ''
                 link = WebDriverWait(self.driver, 5).until(
                     EC.presence_of_element_located((By.XPATH, xpath)))
-                clickElement(self.logger, link)
+                click_element(self.logger, link)
                 WebDriverWait(self.driver, 10).until(
                     EC.number_of_windows_to_be(2))
                 self.driver.switch_to.window(self.driver.window_handles[(-1)])
@@ -240,8 +240,8 @@ class AutoNewsPlayer:
                 closest = min(cue_points_left, key=lambda x: abs(
                     x['leftPercent'] - target_percent))['element']
                 self.logger.info(f'尝试点击最接近{target_percent:.1f}%的时间点')
-                ret = clickElement(self.logger, closest, max_retries=100,
-                                   wait_time=0.5, fail_callback=self.hover2Element)
+                ret = click_element(self.logger, closest, max_retries=100,
+                                    wait_time=0.5, fail_callback=self.hover2Element)
                 return ret
         except TimeoutException:
             return None
@@ -388,7 +388,7 @@ class AutoNewsPlayer:
 
             btns_num = len(fullscreen_buttons)
             if btns_num >= 2:
-                clickElement(
+                click_element(
                     self.logger, fullscreen_buttons[(-1)], wait_time=0.5, fail_callback=self.hover2Element)
                 return True
             else:

@@ -1,11 +1,11 @@
 import sys
 
-from PyQt5.QtWidgets import QApplication
-from modules.AutoNewsPlayer import AutoNewsPlayer
+from modules.auto_news_player import AutoNewsPlayer
 from utils.utils_lib import Utils, LoggerManager, ConfigManager
+from PyQt5.QtWidgets import QApplication
 
-from windows.Notification import Notification
-from windows.Main import MainWindow
+from windows.notification import Notification
+from windows.main import MainWindow
 
 if __name__ == '__main__':
     Utils.sync_work_dir()
