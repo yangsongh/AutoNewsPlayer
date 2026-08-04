@@ -189,7 +189,7 @@ AutoNewsPlayer/
 | `max_ad_check`      | number  | 广告检测最大重试次数                                                              |
 | `ad_check_wait`     | number  | 每次广告检测后等待时间（秒）                                                      |
 
-### Chrome 定制版目录配置
+### Chrome 自动测试版目录配置
 
 程序会按以下顺序自动查找 Chrome 目录：
 
